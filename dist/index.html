@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在浏览器本地把字体转换为 SVG 轮廓，按毫米适配文字，并生成 A4 重复排版。">
+  <meta name="color-scheme" content="light">
+  <title>OpenPrintText · 定制文字转矢量</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/opentype.min.js" defer></script>
+  <script src="assets/demo-font.js" defer></script>
+  <script src="engine.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#workspace" aria-label="OpenPrintText 工作区">
+      <svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#235c43"/><path d="M8 10V8h16v2M16 9v15m-5 0h10M7 19h3m12 0h3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>OpenPrintText<span class="brand-tag">定制文字转矢量</span></span>
+    </a>
+    <div class="header-actions"><span class="local-status"><i></i>本地处理</span><button class="quiet-button" id="help-button" type="button">使用说明 <span aria-hidden="true">↗</span></button></div>
+  </header>
+
+  <main id="workspace">
+    <section class="intro">
+      <div><p class="eyebrow">为小型印刷与定制工作室制作</p><h1>把文字，变成可印刷的轮廓<span>。</span></h1><p class="intro-copy">加载字体，设定尺寸，导出真正的 SVG 路径。</p></div>
+      <div class="version-note"><span>v0.1.0</span><br>早期试用版</div>
+    </section>
+
+    <div class="workbench">
+      <aside class="controls" aria-label="文字与尺寸设置">
+        <section class="control-section">
+          <div class="section-title"><span class="step">01</span><h2>文字与字体</h2></div>
+          <label class="field-label" for="text-input">定制内容<span id="char-count">11 个字符</span></label>
+          <textarea id="text-input" spellcheck="false" rows="3" maxlength="2000" placeholder="输入需要印刷的文字，可换行">CUSTOM TEXT</textarea>
+          <div class="example-row"><span>试试</span><button type="button" class="example" data-text="TEAM 2027">TEAM 2027</button><button type="button" class="example" data-text="THANK YOU">THANK YOU</button><button type="button" class="example" data-text="HELLO&#10;WORLD">两行文字</button></div>
+          <div class="font-box"><div class="font-mark" aria-hidden="true">Aa</div><div class="font-info"><span id="font-name">正在加载示例字体…</span><small id="font-detail">示例字体 · 适合英文</small></div><button type="button" id="reset-font" class="text-button" title="恢复示例字体">重置</button></div>
+          <label class="upload-button" for="font-file"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 13V3m-4 4 4-4 4 4M4 13v4h12v-4"/></svg>加载本机字体 <span>.ttf / .otf</span></label>
+          <input class="visually-hidden" type="file" id="font-file" accept=".ttf,.otf">
+          <p class="field-help">中文请加载含对应汉字的字体。字体文件和文字均在浏览器本地处理。</p>
+        </section>
+
+        <section class="control-section">
+          <div class="section-title"><span class="step">02</span><h2>印刷区域</h2><span class="unit-badge">毫米 mm</span></div>
+          <div class="field-grid"><label>宽度<div class="number-wrap"><input id="width-mm" type="number" min="1" max="1000" step="0.5" value="60" inputmode="decimal"><span>mm</span></div></label><label>高度<div class="number-wrap"><input id="height-mm" type="number" min="1" max="1000" step="0.5" value="10" inputmode="decimal"><span>mm</span></div></label></div>
+          <div class="field-grid compact"><label>四边留白<div class="number-wrap"><input id="padding-mm" type="number" min="0" max="100" step="0.25" value="1" inputmode="decimal"><span>mm</span></div></label><label>额外字距<div class="number-wrap"><input id="spacing-mm" type="number" min="0" max="20" step="0.1" value="0" inputmode="decimal"><span>mm</span></div></label></div>
+          <div class="field-grid compact"><label>行间留白<div class="number-wrap"><input id="line-gap-mm" type="number" min="0" max="100" step="0.25" value="1" inputmode="decimal"><span>mm</span></div></label><div class="fit-note"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3H3v3m11-3h3v3M3 14v3h3m11-3v3h-3M6 10h8m-4-4v8"/></svg>等比例适配<br><small>保持字形比例</small></div></div>
+          <label class="check-row"><input id="mirror" type="checkbox"><span>水平镜像<span class="check-hint">按实际印刷流程选用</span></span></label>
+        </section>
+
+        <section class="control-section sheet-controls">
+          <div class="section-title"><span class="step">03</span><h2>A4 重复排版</h2></div>
+          <div class="field-grid"><label>每页数量<div class="number-wrap"><input id="copy-count" type="number" min="1" max="1000" step="1" value="12" inputmode="numeric"><span>枚</span></div></label><label>区域间距<div class="number-wrap"><input id="sheet-gap-mm" type="number" min="0" max="50" step="0.5" value="3" inputmode="decimal"><span>mm</span></div></label></div>
+          <div class="capacity-row"><span id="capacity-label">A4 · 四边页边距 10 mm</span><button type="button" id="fill-page" class="text-button">铺满一页</button></div>
+          <label class="check-row"><input id="guides" type="checkbox"><span>导出裁切参考框<span class="check-hint">勾选后参考框会一起印出</span></span></label>
+        </section>
+      </aside>
+
+      <section class="preview-column" aria-label="实时预览与导出">
+        <div class="preview-card">
+          <div class="preview-toolbar"><div class="tabs" role="tablist" aria-label="预览模式"><button type="button" id="tab-single" role="tab" aria-selected="true" aria-controls="panel-single" class="tab active">单件预览</button><button type="button" id="tab-sheet" role="tab" aria-selected="false" aria-controls="panel-sheet" class="tab" tabindex="-1">A4 拼版</button></div><span class="preview-chip" id="preview-chip">60 × 10 mm</span></div>
+          <div id="panel-single" class="preview-scene" role="tabpanel" aria-labelledby="tab-single"><span class="scene-label">印刷区域 / PRINT AREA</span><div class="single-stage" id="single-stage"><div class="artboard" id="artboard"><div id="single-svg"></div><span class="ruler-x" id="ruler-x">60 mm</span><span class="ruler-y" id="ruler-y">10 mm</span></div></div><p class="scene-caption">预览框和尺寸标注不会出现在单件 SVG 中</p></div>
+          <div id="panel-sheet" class="sheet-scene" role="tabpanel" aria-labelledby="tab-sheet" hidden><div class="sheet-paper" id="sheet-svg"></div><p class="scene-caption">A4 · 210 × 297 mm · 页边距 10 mm</p></div>
+          <div class="error-message" id="error-message" role="alert" hidden></div>
+          <div class="preview-stats"><div><small>实际文字范围</small><strong id="ink-size">—</strong></div><div><small>轮廓路径</small><strong id="path-count">—</strong></div><div><small>输出方式</small><strong id="direction">正向 · 黑色实心</strong></div></div>
+        </div>
+
+        <div class="export-panel"><div><h2>导出你的排版</h2><p>SVG 内已转为路径，导入时无需再次匹配字体。</p></div><div class="export-buttons"><button type="button" id="download-single" class="primary-button" disabled><svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 3v10m-4-4 4 4 4-4M4 14v3h12v-3"/></svg>下载单件 SVG</button><button type="button" id="download-sheet" class="secondary-button" disabled>下载 A4 SVG</button><button type="button" id="print-sheet" class="quiet-button print-button" disabled>打印 A4</button></div><p class="export-note">导入 CDR 后先核对毫米尺寸。首次生产前请试印；浏览器打印请选择 A4、100% / 实际大小，并关闭页眉页脚。</p><div id="download-status" class="download-status" role="status" aria-live="polite"></div></div>
+
+        <div class="project-note"><span class="note-dot" aria-hidden="true"></span><p><strong>小工具，真实用途。</strong>这是一个早期版本，欢迎用真实订单验证文字、尺寸与导入效果。暂不支持复杂文字排版、彩色字体和完整 CAD 编辑。</p></div>
+      </section>
+    </div>
+    <footer><span>OpenPrintText <span class="footer-dot">·</span> MIT 开源许可</span><span>无需账号 <span class="footer-dot">/</span> 无需 API <span class="footer-dot">/</span> 本地字体处理</span></footer>
+  </main>
+
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-header"><span class="eyebrow">快速上手</span><button type="button" id="close-help" class="icon-button" aria-label="关闭使用说明">×</button></div><h2 id="help-title">从文字到轮廓，只需三步</h2><ol class="help-list"><li><strong>输入文字，加载字体。</strong><p>示例字体适合英文。中文或指定字体，请载入你有权使用的 TTF / OTF 文件。</p></li><li><strong>填写实际印刷区域。</strong><p>单位为毫米；四边留白会缩小可用区域。文字按字形比例居中适配，不强行拉宽。</p></li><li><strong>下载 SVG，先核对再生产。</strong><p>导入 CorelDRAW 等矢量软件，确认文字完整、尺寸和镜像方向。A4 文件可以重复排版，裁切框默认不导出。</p></li></ol><div class="help-warning"><strong>当前边界</strong><p>这是独立的小工具，尚未在你的 CorelDRAW 2019 和打印机上验证。彩色字体、字体集合 TTC、可变字体轴设置、复杂连写与组合符排版暂不支持；不要直接用于未经核对的批量生产。</p></div><p class="help-privacy">应用本身不上传你的文字与字体。下载后的 SVG 只含轮廓；请自行确认所用字体的商用和轮廓导出许可。</p><button type="button" id="help-done" class="primary-button">开始排版</button></dialog>
+  <div id="print-area" aria-hidden="true"></div>
+  <noscript><p class="noscript">需要启用浏览器 JavaScript 才能使用这个排版工具。</p></noscript>
+</body>
+</html>
