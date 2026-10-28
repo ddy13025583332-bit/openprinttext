@@ -272,3 +272,13 @@ test('the bundled real DejaVu font parses and exports common production sample t
   }
   throwsCode(() => engine.layoutText(realFont, { ...base, text: '定制手环' }), 'MISSING_GLYPH');
 });
+
+
+test('default A4 count respects the export safety cap for tiny labels', () => {
+  const tiny = layout({ text: 'A', widthMm: 1, heightMm: 1, paddingMm: 0 });
+  const result = engine.composeSheet(tiny, { marginMm: 0, gapXmm: 0, gapYmm: 0 });
+  assert.ok(result.capacity > engine.limits.maxCopies);
+  assert.equal(result.actualCount, engine.limits.maxCopies);
+  assert.equal(result.placements.length, engine.limits.maxCopies);
+  throwsCode(() => engine.composeSheet(tiny, { marginMm: 0, gapXmm: 0, gapYmm: 0, count: 1001 }), 'INVALID_INPUT');
+});
