@@ -314,7 +314,10 @@
     var rows = Math.max(0, Math.floor((usableHeight + gapY + EPSILON) / (labelHeight + gapY)));
     var capacity = cols * rows;
     if (!capacity) fail('LABEL_TOO_LARGE', '当前标签无法放入纸张，请缩小标签或调整纸张边距。', { capacity: 0 });
-    var count = number(options.count, '排版数量', capacity, 1, LIMITS.maxCopies);
+    // A very small label may yield a physical capacity above the per-export safety limit.
+    // Default to the safe maximum; explicit counts above that limit still fail.
+    var defaultCount = Math.min(capacity, LIMITS.maxCopies);
+    var count = number(options.count, '排版数量', defaultCount, 1, LIMITS.maxCopies);
     if (!Number.isInteger(count)) fail('INVALID_INPUT', '排版数量必须是整数。');
     if (count > capacity) fail('OVER_CAPACITY', '当前纸张最多放置 ' + capacity + ' 个标签，请减少数量或调整间距。', { capacity: capacity, requestedCount: count });
     var labelMarkup = pathsMarkup(layout.paths, fill);
