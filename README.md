@@ -18,7 +18,7 @@ OpenPrintText 面向需要制作文字印刷稿的小型工作室。你可以在
 
 ## 第一次使用：Windows
 
-1. [打开离线单文件版下载页](downloads/OpenPrintText-v0.1.0.html)，点击文件页的下载按钮，将 HTML 保存到电脑；也可通过仓库的 **Code → Download ZIP** 下载并完整解压项目包。
+1. **优先使用已通过自动检查的最新维护构建**：打开 [GitHub Actions 验证记录](https://github.com/ddy13025583332-bit/openprinttext/actions/workflows/ci.yml)，选择最新一次 `main` 分支且显示绿色成功的运行，在底部 **Artifacts** 下载 `OpenPrintText-current-offline`，解压得到 HTML（GitHub 可能要求登录；构建文件保留 30 天）。也可以使用仓库 **Code → Download ZIP**，完整解压后打开 `dist/index.html`。旧的 [v0.1.0 单文件下载包](downloads/OpenPrintText-v0.1.0.html) 是 2026-10-24 发布的历史快照，**不包含后来合并的源码修复**。
 2. 用 Edge 或 Chrome 打开单文件版，或源码包中的 `dist/index.html`。请打开网页文件，不要在压缩包预览器中操作。
 3. 先输入一段简单文字，例如 `CUSTOM TEXT 2027`，查看默认字体效果。
 4. 要做中文图案，选择自己本机上有相应字形且允许用于该用途的 TTF／OTF 字体。内置 DejaVu Sans 不覆盖常用中文字形。
