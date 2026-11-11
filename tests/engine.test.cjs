@@ -282,3 +282,19 @@ test('default A4 count respects the export safety cap for tiny labels', () => {
   assert.equal(result.placements.length, engine.limits.maxCopies);
   throwsCode(() => engine.composeSheet(tiny, { marginMm: 0, gapXmm: 0, gapYmm: 0, count: 1001 }), 'INVALID_INPUT');
 });
+
+
+test('counts Unicode after NFC so valid accented text is not rejected too early', () => {
+  // A minimal test font that supports the composed character é.
+  const accentedFont = {
+    unitsPerEm: 1000,
+    getKerningValue: () => 0,
+    charToGlyphIndex: ch => ch === '\u00e9' ? 1 : 0,
+    charToGlyph: ch => ch === '\u00e9' ? { index: 1, name: 'eacute' } : null
+  };
+  const normalized = engine.validateFontText(accentedFont, 'e\u0301'.repeat(2000));
+  assert.equal(normalized.text, '\u00e9'.repeat(2000));
+  assert.equal(normalized.lineCount, 1);
+  throwsCode(() => engine.validateFontText(accentedFont, 'e\u0301'.repeat(2001)), 'TEXT_TOO_LONG');
+  throwsCode(() => engine.validateFontText(accentedFont, '\u00e9'.repeat(2001)), 'TEXT_TOO_LONG');
+});
