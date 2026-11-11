@@ -66,10 +66,15 @@
 
   function normalizeText(text) {
     if (typeof text !== 'string') fail('INVALID_INPUT', '请输入需要转曲的文字。');
-    if (text.length > LIMITS.maxCharacters * 2 || Array.from(text).length > LIMITS.maxCharacters) {
+    // NFC can compose a base letter and combining marks into one visible character.
+    // Bound raw input before normalization, then enforce the user-facing character limit.
+    if (text.length > LIMITS.maxCharacters * 8) {
       fail('TEXT_TOO_LONG', '文字最多支持 ' + LIMITS.maxCharacters + ' 个字符。');
     }
     text = text.replace(/\r\n?/g, '\n').normalize('NFC');
+    if (Array.from(text).length > LIMITS.maxCharacters) {
+      fail('TEXT_TOO_LONG', '文字最多支持 ' + LIMITS.maxCharacters + ' 个字符。');
+    }
     if (!text.trim()) fail('EMPTY_TEXT', '请输入至少一个可见字符，不能只有空格或换行。');
     if (text.split('\n').length > LIMITS.maxLines) fail('TOO_MANY_LINES', '最多支持 ' + LIMITS.maxLines + ' 行文字。');
     Array.from(text).forEach(function (ch) {
