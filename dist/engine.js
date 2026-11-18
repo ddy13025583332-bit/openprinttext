@@ -319,15 +319,20 @@
     var rows = Math.max(0, Math.floor((usableHeight + gapY + EPSILON) / (labelHeight + gapY)));
     var capacity = cols * rows;
     if (!capacity) fail('LABEL_TOO_LARGE', '当前标签无法放入纸张，请缩小标签或调整纸张边距。', { capacity: 0 });
-    // A very small label may yield a physical capacity above the per-export safety limit.
-    // Default to the safe maximum; explicit counts above that limit still fail.
-    var defaultCount = Math.min(capacity, LIMITS.maxCopies);
-    var count = number(options.count, '排版数量', defaultCount, 1, LIMITS.maxCopies);
+    var labelMarkup = pathsMarkup(layout.paths, fill);
+    // A page can physically fit more labels than the bounded SVG export can safely hold.
+    // Account for the generated path payload as well as the 1000-copy limit. The
+    // 300-character allowance per copy conservatively covers group/guide markup.
+    var maxSafeCopies = Math.min(capacity, LIMITS.maxCopies,
+      Math.floor(LIMITS.maxSheetSvgCharacters / (labelMarkup.length + 300)));
+    if (!maxSafeCopies) {
+      fail('SHEET_TOO_COMPLEX', '单件文字轮廓过于复杂，无法安全生成 A4 拼版。请缩短文字或简化字体。');
+    }
+    var count = number(options.count, '排版数量', maxSafeCopies, 1, LIMITS.maxCopies);
     if (!Number.isInteger(count)) fail('INVALID_INPUT', '排版数量必须是整数。');
     if (count > capacity) fail('OVER_CAPACITY', '当前纸张最多放置 ' + capacity + ' 个标签，请减少数量或调整间距。', { capacity: capacity, requestedCount: count });
-    var labelMarkup = pathsMarkup(layout.paths, fill);
-    if ((labelMarkup.length + 300) * count > LIMITS.maxSheetSvgCharacters) {
-      fail('SHEET_TOO_COMPLEX', '整页 SVG 过大，请减少排版数量或文字复杂度。');
+    if (count > maxSafeCopies) {
+      fail('SHEET_TOO_COMPLEX', '当前图案的 A4 安全导出上限为 ' + maxSafeCopies + ' 枚，请减少排版数量或简化文字。', { maxSafeCopies: maxSafeCopies, requestedCount: count });
     }
     var body = [];
     var placements = [];
@@ -341,7 +346,8 @@
       if (guides) body.push('<rect x="' + format(x) + '" y="' + format(y) + '" width="' + format(labelWidth) +
         '" height="' + format(labelHeight) + '" fill="none" stroke="#9ca3af" stroke-width="0.1" stroke-dasharray="1 1"/>');
     }
-    return { svg: svgRoot(pageWidth, pageHeight, body.join('')), capacity: capacity, actualCount: count,
+    return { svg: svgRoot(pageWidth, pageHeight, body.join('')), capacity: capacity,
+      maxSafeCopies: maxSafeCopies, actualCount: count,
       cols: cols, rows: rows, pageWidthMm: pageWidth, pageHeightMm: pageHeight, placements: placements };
   }
 
