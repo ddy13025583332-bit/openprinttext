@@ -10,6 +10,7 @@
   var currentLayout = null;
   var currentSheet = null;
   var pageCapacity = 0;
+  var pageSafeCapacity = 0;
   var mode = 'single';
   var renderTimer = null;
 
@@ -61,6 +62,7 @@
     currentLayout = null;
     currentSheet = null;
     pageCapacity = 0;
+    pageSafeCapacity = 0;
     $('single-svg').replaceChildren();
     $('sheet-svg').replaceChildren();
     $('ink-size').textContent = '—';
@@ -113,7 +115,9 @@
       var capacityOptions = Object.assign({}, sheetOptions, { count: 1 });
       var capacityResult = Engine.composeSheet(currentLayout, capacityOptions);
       pageCapacity = capacityResult.capacity;
-      $('capacity-label').textContent = '每页可排 ' + pageCapacity + ' 枚 · 页边距 10 mm';
+      pageSafeCapacity = capacityResult.maxSafeCopies;
+      $('capacity-label').textContent = '每页可排 ' + pageCapacity + ' 枚' +
+        (pageSafeCapacity < pageCapacity ? ' · 安全导出上限 ' + pageSafeCapacity + ' 枚' : '') + ' · 页边距 10 mm';
       $('fill-page').disabled = false;
       currentSheet = Engine.composeSheet(currentLayout, sheetOptions);
       mountSVG($('sheet-svg'), currentSheet.svg);
@@ -214,10 +218,13 @@
     $('tab-' + mode).focus();
   });
   $('fill-page').addEventListener('click', function () {
-    $('copy-count').value = Math.min(Engine.limits.maxCopies, pageCapacity);
+    var physicalCapacity = pageCapacity;
+    var safeCapacity = pageSafeCapacity;
+    $('copy-count').value = safeCapacity;
     render();
     updateMode('sheet');
-    if (pageCapacity > Engine.limits.maxCopies) $('download-status').textContent = '为保持浏览器响应，单次导出最多 ' + Engine.limits.maxCopies + ' 枚。';
+    if (safeCapacity < physicalCapacity) $('download-status').textContent =
+      '已按当前 SVG 复杂度自动限制为 ' + safeCapacity + ' 枚，避免整页导出过大。';
   });
   $('download-single').addEventListener('click', function () {
     if (!currentLayout) return;
