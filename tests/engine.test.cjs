@@ -298,3 +298,29 @@ test('counts Unicode after NFC so valid accented text is not rejected too early'
   throwsCode(() => engine.validateFontText(accentedFont, 'e\u0301'.repeat(2001)), 'TEXT_TOO_LONG');
   throwsCode(() => engine.validateFontText(accentedFont, '\u00e9'.repeat(2001)), 'TEXT_TOO_LONG');
 });
+
+
+test('A4 fill stays within the SVG size budget when physical label capacity is very high', () => {
+  // A long, syntactically valid path simulates a complex outlined custom label.
+  // Keep the physical label tiny so page capacity is much larger than safe SVG capacity.
+  const pathData = 'M0 0L1 1Z'.repeat(6000);
+  const denseLabel = {
+    ...layout(), widthMm: 0.1, heightMm: 0.1, paths: [{ d: pathData }]
+  };
+  const options = { marginMm: 0, gapXmm: 0, gapYmm: 0 };
+  const probe = engine.composeSheet(denseLabel, { ...options, count: 1 });
+  const expected = Math.floor(engine.limits.maxSheetSvgCharacters /
+    (('<path fill="#000000" d="' + pathData + '"/>').length + 300));
+  assert.ok(probe.capacity > engine.limits.maxCopies);
+  assert.equal(probe.maxSafeCopies, expected);
+  assert.ok(probe.maxSafeCopies < engine.limits.maxCopies);
+  assert.throws(() => engine.composeSheet(denseLabel, { ...options, count: 1000 }), error => {
+    assert.equal(error.code, 'SHEET_TOO_COMPLEX');
+    assert.equal(error.maxSafeCopies, expected);
+    return true;
+  });
+  const automatic = engine.composeSheet(denseLabel, options);
+  assert.equal(automatic.actualCount, expected);
+  assert.equal(automatic.placements.length, expected);
+  assert.ok(automatic.svg.length <= engine.limits.maxSheetSvgCharacters);
+});
