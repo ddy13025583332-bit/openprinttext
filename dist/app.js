@@ -73,7 +73,9 @@
   }
   function render() {
     clearTimeout(renderTimer);
-    $('char-count').textContent = Array.from($('text-input').value).length + ' 个字符';
+    var inputText = $('text-input').value;
+    $('char-count').textContent = (Engine ? Engine.countCharacters(inputText) :
+      Array.from(inputText.replace(/\r\n?/g, '\n').normalize('NFC')).length) + ' 个字符';
     $('download-status').textContent = '';
     disableDownloads();
     currentSheet = null;
