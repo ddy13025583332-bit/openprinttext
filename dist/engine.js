@@ -64,6 +64,15 @@
       (cp >= 0x1e900 && cp <= 0x1e95f);
   }
 
+  function normalizeForCounting(text) {
+    if (typeof text !== 'string') fail('INVALID_INPUT', '请输入需要转曲的文字。');
+    return text.replace(/\r\n?/g, '\n').normalize('NFC');
+  }
+
+  function countCharacters(text) {
+    return Array.from(normalizeForCounting(text)).length;
+  }
+
   function normalizeText(text) {
     if (typeof text !== 'string') fail('INVALID_INPUT', '请输入需要转曲的文字。');
     // NFC can compose a base letter and combining marks into one visible character.
@@ -71,7 +80,7 @@
     if (text.length > LIMITS.maxCharacters * 8) {
       fail('TEXT_TOO_LONG', '文字最多支持 ' + LIMITS.maxCharacters + ' 个字符。');
     }
-    text = text.replace(/\r\n?/g, '\n').normalize('NFC');
+    text = normalizeForCounting(text);
     if (Array.from(text).length > LIMITS.maxCharacters) {
       fail('TEXT_TOO_LONG', '文字最多支持 ' + LIMITS.maxCharacters + ' 个字符。');
     }
@@ -351,6 +360,6 @@
       cols: cols, rows: rows, pageWidthMm: pageWidth, pageHeightMm: pageHeight, placements: placements };
   }
 
-  return Object.freeze({ version: '0.1.0', limits: LIMITS, validateFontText: validateFontText,
+  return Object.freeze({ version: '0.1.0', limits: LIMITS, countCharacters: countCharacters, validateFontText: validateFontText,
     layoutText: layoutText, composeSheet: composeSheet });
 });
