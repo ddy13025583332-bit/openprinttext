@@ -285,11 +285,11 @@ test('default A4 count respects the export safety cap for tiny labels', () => {
 
 
 test('character counter uses NFC and Unicode code points, matching text validation', () => {
-  assert.equal(engine.countCharacters('e\\u0301'.repeat(2000)), 2000);
-  assert.equal(engine.countCharacters('\\u00e9'.repeat(2000)), 2000);
-  assert.equal(engine.countCharacters('A\\r\\nB'), 3);
-  assert.equal(engine.countCharacters('A\\rB'), 3);
-  assert.equal(engine.countCharacters('\\u{1F642}'), 1);
+  assert.equal(engine.countCharacters('e\u0301'.repeat(2000)), 2000);
+  assert.equal(engine.countCharacters('\u00e9'.repeat(2000)), 2000);
+  assert.equal(engine.countCharacters('A\r\nB'), 3);
+  assert.equal(engine.countCharacters('A\rB'), 3);
+  assert.equal(engine.countCharacters('\u{1F642}'), 1);
   throwsCode(() => engine.countCharacters(null), 'INVALID_INPUT');
 });
 
